@@ -1,0 +1,160 @@
+name: magicmirror
+version: '2.5.0'
+summary: The open source modular smart mirror platform
+description: |
+  MagicMirror² is an open source modular smart mirror platform. With a growing
+  list of installable modules, the MagicMirror² allows you to convert your
+  hallway or bathroom mirror into your personal assistant. MagicMirror² is
+  built by the creator of the original MagicMirror with the incredible help of
+  a growing community of contributors.
+
+  For more info about MagicMirror see the upstream Github page at
+  https://github.com/MichMich/MagicMirror.git
+
+  To inpect the source code of the snap see
+  https://github.com/ogra1/magicmirror-snap
+
+grade: stable
+confinement: strict
+
+apps:
+  magicmirror:
+    command: wrapper.sh
+    plugs:
+      - browser-support
+      - desktop
+      - network
+      - network-bind
+      - opengl
+      - x11
+
+parts:
+  mynode:
+    source: .
+    plugin: nil
+    override-build: |
+      VERS="v10.12.0"
+      echo "getting node $VERS"
+      case $(arch) in
+          armv7l)
+            NODEVER="node-$VERS-linux-armv7l.tar.xz"
+            ;;
+          aarch64)
+            NODEVER="node-$VERS-linux-arm64.tar.xz"
+            ;;
+          x86_64)
+            NODEVER="node-$VERS-linux-x64.tar.xz"
+            ;;
+      esac
+      wget -q -O- https://nodejs.org/dist/$VERS/$NODEVER | \
+        tar xJ --strip-components=1
+      rm CHANGELOG.md README.md
+      cp -a * $SNAPCRAFT_PART_INSTALL/
+    build-packages:
+      - tar
+      - wget
+  magicmirror:
+    source: https://github.com/MichMich/MagicMirror.git
+    source-tag: v2.5.0
+    source-depth: 1
+    plugin: nil
+    override-build: |
+      cd vendor && npm install
+      cd -
+      npm install
+      cp -a * $SNAPCRAFT_PART_INSTALL/
+      cp ../../../wrapper.sh $SNAPCRAFT_PART_INSTALL/
+      # set up defaults in a writable area
+      ln -s /var/snap/magicmirror/current/config.js $SNAPCRAFT_PART_INSTALL/config/config.js
+    stage-packages:
+      - git
+      - libasound2
+      - libatk1.0-0
+      - libatk-bridge2.0-0
+      - libatspi2.0-0
+      - libavahi-client3
+      - libavahi-common3
+      - libboost-filesystem1.58.0
+      - libboost-system1.58.0
+      - libcairo2
+      - libcairo-gobject2
+      - libcapnp-0.5.3
+      - libcups2
+      - libdatrie1
+      - libdbus-glib-1-2
+      - libepoxy0
+      - libfontconfig1
+      - libgconf-2-4
+      - libgdk-pixbuf2.0-0
+      - libgraphite2-3
+      - libgtk-3-0
+      - libharfbuzz0b
+      - libmirclient9
+      - libmircommon7
+      - libmircore1
+      - libmirprotobuf3
+      - libnss3
+      - libpango-1.0-0
+      - libpangocairo-1.0-0
+      - libpangoft2-1.0-0
+      - libpixman-1-0
+      - libprotobuf-lite9v5
+      - libthai0
+      - libwayland-client0
+      - libwayland-cursor0
+      - libwayland-egl1-mesa
+      - libx11-6
+      - libx11-xcb1
+      - libxau6
+      - libxcb1
+      - libxcb-render0
+      - libxcb-shm0
+      - libxcomposite1
+      - libxcursor1
+      - libxdamage1
+      - libxdmcp6
+      - libxext6
+      - libxfixes3
+      - libxi6
+      - libxinerama1
+      - libxkbcommon0
+      - libxrandr2
+      - libxrender1
+      - libxss1
+      - libxtst6
+    after: [ mynode ]
+#  modules:
+#    plugin: nil
+#    override-build: |
+#      # build all possible modules (adds 600MB to the snap)
+#      rm wrapper.sh
+#      # this is awfully hackish screen scraping, but there is no other
+#      # 3rd party modules list apart from the GH wiki page
+#      MODLIST="$(wget -q -O- https://github.com/MichMich/MagicMirror/wiki/3rd-Party-Modules/| \
+#               grep "<td align=\"left\"><a href=\"https://github.com/[a-zA-Z0-9-]*/[a-zA-Z0-9]"| \
+#                     sed 's/^.*href="//;s/">.*$//')"
+#      for branch in $MODLIST; do
+#          module="$(basename $branch|sed 's/.git$//')"
+#          echo
+#          # blacklist for modules with build issues
+#          case "$module" in
+#          MMM-Button*|MMM-ModuleToggleButton*|MMM-Navigate*|MMM-shabbat*|MMM-TracCar*|MMM-RNV*|MMM-Hotword*|magic-mirror-voice*|MMM-DHT-Sensor*|MMM-awesome-alexa*|MMM-Loxone*|MMM-MPR121*|MMM-pihole-stats*|MMM-PIR-Sensor*|MMM-RTSPStream*|MMM-Swipe*|MMM-YouLess*|MMM-MP3Player*|MMM-PlexDeck*|MMM-Podcast*)
+#            echo "$module blacklisted, skipping"
+#            continue
+#          ;;
+#          esac
+#          echo "getting module $module"
+#          git clone --depth=1 $branch || continue
+#          if [ -e $module/package.json ]; then
+#              cd $module
+#              npm install
+#              cd - >/dev/null 2>&1
+#          fi
+#      done
+#      rm -rf */.git
+#      mkdir -p $SNAPCRAFT_PART_INSTALL/modules
+#      cp -a * $SNAPCRAFT_PART_INSTALL/modules/
+#    build-packages:
+#      - git
+#      - wget
+#    after: [ magicmirror ]

@@ -1,0 +1,6 @@
+#! /bin/sh
+
+set -e
+
+[ -e "$SNAP_DATA/config.js" ] || \
+    cp $SNAP/config/config.js.sample $SNAP_DATA/config.js
