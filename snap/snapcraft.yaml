@@ -20,8 +20,6 @@ confinement: strict
 architectures:
   - build-on: armhf
     run-on: armhf
-  - build-on: arm64
-    run-on: arm64
   - build-on: amd64
     run-on: amd64
 
@@ -34,6 +32,7 @@ apps:
       - network
       - network-bind
       - opengl
+      - wayland
       - x11
 
 parts:

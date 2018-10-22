@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=MagicMirror²
+Comment=The open source modular smart mirror platform
+Icon=${SNAP}/meta/gui/icon.png
+Exec=magicmirror
+Terminal=false
+Categories=Utility;
